@@ -1,0 +1,43 @@
+name: Build HUD v30
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "hud/**"
+      - "tools/build_v30.py"
+      - "Simurgh_HUD_Debian_v28.html"
+      - ".github/workflows/build-v30.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hud-v30
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Compose Simurgh_HUD_Debian_v30.html
+        run: python3 tools/build_v30.py
+
+      - name: Commit the composed HUD
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Simurgh_HUD_Debian_v30.html
+          if git diff --cached --quiet; then
+            echo "v30 build is already up to date."
+            exit 0
+          fi
+          git commit -m "build: compose HUD v30 from v28 + v30 layer"
+          git push
